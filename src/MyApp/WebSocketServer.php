@@ -12,20 +12,25 @@ class WebSocketServer implements MessageComponentInterface {
  
     public function onOpen(ConnectionInterface $conn) {
         $this->clients->attach($conn);
- 
+
         echo "New connection! ({$conn->resourceId})\n";
     }
  
     public function onMessage(ConnectionInterface $from, $msg) {
-        $numRecv = count($this->clients) - 1;
-        echo sprintf('Connection %d sending message "%s" to %d other connection%s' . "\n"
-            , $from->resourceId, $msg, $numRecv, $numRecv == 1 ? '' : 's');
- 
+        $from_param = $this->parse_url_param($from->httpRequest->getRequestTarget());
+
         foreach ($this->clients as $client) {
-            if ($from !== $client) {
+            $client_parm = $this->parse_url_param($client->httpRequest->getRequestTarget());
+            if (
+                    $from !== $client &&
+                    $from_param['mode'] === $client_parm['mode'] &&
+                    $from_param['participation_event'] == $client_parm['participation_event']
+                ) {
                 $client->send($msg);
             }
         }
+
+        // TODO: チャット用処理
     }
  
     public function onClose(ConnectionInterface $conn) {
@@ -39,5 +44,11 @@ class WebSocketServer implements MessageComponentInterface {
         echo "An error has occurred: {$e->getMessage()}\n";
  
         $conn->close();
+    }
+
+    private function parse_url_param($string) {
+        $query = str_replace("/?", "", $string);
+        parse_str($query, $return_param);
+        return $return_param;
     }
 }
