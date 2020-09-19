@@ -19,6 +19,30 @@ class WebSocketServer implements MessageComponentInterface {
     public function onMessage(ConnectionInterface $from, $msg) {
         $from_param = $this->parse_url_param($from->httpRequest->getRequestTarget());
 
+        $context = stream_context_create(
+            array(
+                'http' => array(
+                    'method'=> 'PUT',
+                    'header'=> 'Content-type: application/json; charset=UTF-8',
+                    'content' => http_build_query(
+                        array(
+                            'event_id' => 39,
+                            'token_id' => '5f6022884c4f4'
+                        )
+                    )
+                )
+            )
+        );
+        $json_object = json_decode(
+            file_get_contents(
+                'http://localhost:8080/api/event/eventattendance.php',
+                false,
+                $context
+            ),
+            true
+        );
+        print_r($json_object['data']['participant_member']);
+
         foreach ($this->clients as $client) {
             $client_parm = $this->parse_url_param($client->httpRequest->getRequestTarget());
             if (
