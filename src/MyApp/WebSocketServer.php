@@ -38,7 +38,7 @@ class WebSocketServer implements MessageComponentInterface {
                 ),
                 true
             );
-    
+
             foreach ($this->clients as $client) {
                 $client_parm = $this->parse_url_param($client->httpRequest->getRequestTarget());
                 if (
@@ -46,7 +46,7 @@ class WebSocketServer implements MessageComponentInterface {
                         $from_param['mode'] === $client_parm['mode'] &&
                         $from_param['participation_event'] == $client_parm['participation_event']
                     ) {
-                    $client->send($json_object['data']['participant_member']);
+                    $client->send(json_encode($json_object['data']));
                 }
             }
         }
