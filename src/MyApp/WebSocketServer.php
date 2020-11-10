@@ -19,6 +19,7 @@ class WebSocketServer implements MessageComponentInterface {
     public function onMessage(ConnectionInterface $from, $msg) {
         $from_param = $this->parse_url_param($from->httpRequest->getRequestTarget());
         $msgObject = json_decode($msg, true);
+        echo $msg;
 
         if($from_param['mode'] === 'attendance') {
             $context = stream_context_create(
@@ -50,35 +51,33 @@ class WebSocketServer implements MessageComponentInterface {
                 }
             }
         } else if($from_param['mode'] === 'chat') {
-            // $context = stream_context_create(
-            //     array(
-            //         'http' => array(
-            //             'method'=> 'POST',
-            //             'header'=> 'Content-type: application/json; charset=UTF-8',
-            //             'content' => http_build_query($msgObject)
-            //         )
-            //     )
-            // );
-            // $json_object = json_decode(
-            //     file_get_contents(
-            //         'http://localhost:8080/api/group/groupchat.php',
-            //         false,
-            //         $context
-            //     ),
-            //     true
-            // );
-            $json_object = [
-                'nickname' => 'test user',
-                'icon' => 'test',
-                'message' => 'test message'
-            ];
+            $context = stream_context_create(
+                array(
+                    'http' => array(
+                        'method'=> 'POST',
+                        'header'=> 'Content-type: application/json; charset=UTF-8',
+                        'content' => http_build_query($msgObject)
+                    )
+                )
+            );
+
+            $json_object = json_decode(
+                file_get_contents(
+                    'http://localhost:8080/api/group/groupchat.php',
+                    false,
+                    $context
+                ),
+                true
+            );
+
+            $json_object = array_merge($json_object['data'][0] ,array('message'=>$msgObject['chat_cont']));
 
             foreach ($this->clients as $client) {
                 $client_parm = $this->parse_url_param($client->httpRequest->getRequestTarget());
                 if (
                         $from !== $client &&
-                        $from_param['mode'] === $client_parm['mode'] &&
-                        $from_param['room'] == $client_parm['room']
+                        'chat' == $client_parm['mode'] &&
+                        $from_param['group-id'] == $client_parm['group-id']
                     ) {
                     $client->send(json_encode($json_object));
                 }
