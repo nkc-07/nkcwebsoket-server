@@ -19,7 +19,7 @@ class WebSocketServer implements MessageComponentInterface {
     public function onMessage(ConnectionInterface $from, $msg) {
         $from_param = $this->parse_url_param($from->httpRequest->getRequestTarget());
         $msgObject = json_decode($msg, true);
-        echo $msg;
+        print($msg."\n");
 
         if($from_param['mode'] === 'attendance') {
             $context = stream_context_create(
@@ -70,12 +70,11 @@ class WebSocketServer implements MessageComponentInterface {
                 true
             );
 
-            $json_object = array_merge($json_object['data'][0] ,array('message'=>$msgObject['chat_cont']));
+            $json_object = array_merge($json_object['data'][0] ,array('chat_cont'=>$msgObject['chat_cont']));
 
             foreach ($this->clients as $client) {
                 $client_parm = $this->parse_url_param($client->httpRequest->getRequestTarget());
                 if (
-                        $from !== $client &&
                         'chat' == $client_parm['mode'] &&
                         $from_param['group-id'] == $client_parm['group-id']
                     ) {
