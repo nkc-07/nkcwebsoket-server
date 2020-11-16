@@ -78,6 +78,11 @@ class WebSocketServer implements MessageComponentInterface {
                         'chat' == $client_parm['mode'] &&
                         $from_param['group-id'] == $client_parm['group-id']
                     ) {
+                    if($from !== $client) {
+                        $json_object = array_merge($json_object ,array('is_client'=>"0"));
+                    } else {
+                        $json_object = array_merge($json_object ,array('is_client'=>"1"));
+                    }
                     $client->send(json_encode($json_object));
                 }
             }
